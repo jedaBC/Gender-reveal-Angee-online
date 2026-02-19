@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Gender Reveal de Angee</title>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root{
+      --gold:#e0b96a;
+      --gold-light: #eac376;
+      --gold-dark: #cfa34f;
+      --sparkle-yellow: #ffed00; 
+      --brown:#6b4f2c;
+      --baby-pink: #fce4ec;
+      --baby-blue: #e3f2fd;
+      --card-base: #ffffff;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    body {
+      height: 100vh;
+      height: 100dvh; 
+      width: 100vw;
+      overflow-y: auto;
+      overflow-x: hidden;
+      font-family: 'Baloo 2', cursive;
+      color: var(--brown);
+      background-color: #fcf8f3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-overflow-scrolling: touch;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 100 100'%3E%3Cpath d='M50 65s-5-3.5-5-7a3 3 0 0 1 5-1.8 3 3 0 0 1 5 1.8c0 3.5-5 7-5 7z' fill='%23e0b96a' fill-opacity='0.25'/%3E%3Cpath d='M0 15s-5-3.5-5-7a3 3 0 0 1 5-1.8 3 3 0 0 1 5 1.8c0 3.5-5 7-5 7zM100 15s-5-3.5-5-7a3 3 0 0 1 5-1.8 3 3 0 0 1 5 1.8c0 3.5-5 7-5 7z' fill='%23e0b96a' fill-opacity='0.25'/%3E%3C/svg%3E");
+    }
+
+    /* --- TELÓN DE ENTRADA --- */
+    .overlay {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2000; transition: opacity 0.8s ease;
+    }
+    .overlay-content { text-align: center; padding: 20px; color: white; width: 100%; }
+    .overlay.hidden { opacity: 0; pointer-events: none; }
+
+    .loader {
+      width: 50px; height: 50px;
+      border: 5px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #startBtn { display: none; animation: fadeIn 0.5s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* --- ESTRELLAS --- */
+    .firefly {
+      position: absolute; width: 2px; height: 2px; background-color: var(--sparkle-yellow);
+      border-radius: 50%; box-shadow: 0 0 8px 2px var(--sparkle-yellow);
+      opacity: 0; pointer-events: none; z-index: -1;
+      display: flex; align-items: center; justify-content: center;
+      animation: twinkle var(--duration) ease-in-out infinite var(--delay);
+    }
+    .firefly::before { content: ''; position: absolute; width: 1.5px; height: 34px; background: linear-gradient(to bottom, transparent, var(--sparkle-yellow) 50%, transparent); }
+    .firefly::after { content: ''; position: absolute; width: 14px; height: 1.5px; background: linear-gradient(to right, transparent, var(--sparkle-yellow) 50%, transparent); }
+    @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1.2); } }
+
+    /* --- TARJETA PRINCIPAL --- */
+    .card{
+      width:100%; max-width:550px;
+      background: linear-gradient(to right, var(--baby-pink) 0%, var(--baby-pink) 15%, var(--card-base) 40%, var(--card-base) 60%, var(--baby-blue) 85%, var(--baby-blue) 100%);
+      border-radius:50px; box-shadow:0 20px 50px rgba(0,0,0,0.1);
+      padding: 30px 25px 40px; text-align:center; position:relative;
+      display:flex; flex-direction:column; align-items:center; justify-content: center; gap: 12px; z-index: 1;
+    }
+    .card::before{ content:""; position:absolute; inset:12px; border-radius:40px; border:2px dashed var(--gold); pointer-events: none; z-index: 2; }
+
+    .clouds-bg { position: absolute; top: 0; left: 0; width: 100%; height: 35%; z-index: 0; opacity: 0.28; border-radius: 50px 50px 0 0; overflow: hidden; }
+    .clouds-bg img { position: absolute; top: 0; height: 100%; width: 85%; object-fit: cover; }
+    .clouds-bg img:nth-child(1) { left: -15%; transform: scaleX(-1); }
+    .clouds-bg img:nth-child(2) { left: 28%; -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%); mask-image: linear-gradient(to right, transparent 0%, black 15%); }
+
+    h1{ font-family: 'Dancing Script', cursive; font-size: clamp(2.8rem, 8vw, 3.8rem); color: var(--gold); line-height: 1; margin-top: 15px; }
+    .subtitle{ font-size: 1.1rem; margin-top: -5px; }
+    .bears{ display:flex; justify-content:center; gap:30px; }
+    .bears img{ width: clamp(100px, 25vw, 130px); height: auto; animation: float 5s ease-in-out infinite; }
+    .bears img:nth-child(2){animation-delay:2.5s}
+    @keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    
+    .story{ max-width:400px; font-size:1.1rem; line-height:1.4; }
+    .story span{ font-family: 'Dancing Script', cursive; color:var(--gold); font-weight:700; font-size: 1.4rem; }
+    
+    .countdown{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; width: 100%; max-width:380px; }
+    .countdown div{ background: rgba(255,255,255,0.7); border-radius:18px; padding:8px 2px; font-size: 0.75rem; text-transform: uppercase; }
+    .countdown span{ display:block; font-size:1.4rem; font-weight:600; color: var(--gold); }
+
+    .btn-3d{
+      padding:14px 40px; border: 1px solid var(--gold-light); border-radius:50px;
+      background: linear-gradient(to bottom, var(--gold), var(--gold-dark));
+      color:#fff; font-family: 'Baloo 2', cursive; font-weight: 600; font-size:1rem;
+      cursor:pointer; position: relative;
+      box-shadow: 0 8px 15px rgba(224, 185, 106, 0.3), inset 0 2px 3px rgba(255, 255, 255, 0.5), inset 0 -3px 3px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s;
+    }
+    .btn-3d:hover:not(.disabled){ transform: translateY(-2px); box-shadow: 0 10px 20px rgba(224, 185, 106, 0.4); }
+    .btn-3d.disabled { opacity: 0.6; filter: grayscale(0.5); cursor: default; }
+    .btn-secondary { background: linear-gradient(to bottom, #d6d6d6, #a8a8a8); border-color: #e0e0e0; }
+
+    .music-control {
+      position: fixed; bottom: 20px; right: 20px; width: 45px; height: 45px;
+      background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 4px 15px rgba(224, 185, 106, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.5);
+      z-index: 1000; font-size: 1.2rem; transition: all 0.3s ease; animation: float 4s ease-in-out infinite;
+    }
+
+    /* --- ESTILOS ENCUESTA --- */
+    .poll-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; font-style: italic; color: var(--brown); }
+    .poll-group { display: flex; gap: 10px; margin-bottom: 20px; }
+    .poll-btn {
+      flex: 1; padding: 10px 5px; border-radius: 20px; border: 1.5px solid #EEE;
+      background: #F9F9F9; cursor: pointer; font-weight: 600; font-size: 0.85rem;
+      font-family: 'Baloo 2', cursive; transition: all 0.3s;
+    }
+    .poll-btn.selected-boy { background: var(--baby-blue); border-color: #90caf9; color: #1565c0; transform: scale(1.05); }
+    .poll-btn.selected-girl { background: var(--baby-pink); border-color: #f48fb1; color: #c2185b; transform: scale(1.05); }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(107, 79, 44, 0.4); backdrop-filter: blur(5px);
+      display: none; align-items: center; justify-content: center; z-index: 100;
+    }
+    .modal-card {
+      width: 90%; max-width: 450px; background: linear-gradient(to right, var(--baby-pink), var(--card-base), var(--baby-blue));
+      border-radius: 40px; padding: 40px 25px; position: relative; text-align: center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.2); animation: popIn 0.3s ease-out;
+    }
+    .modal-card::before { content:""; position:absolute; inset:12px; border-radius:30px; border:2px dashed var(--gold); pointer-events: none; }
+    .close-x { position: absolute; top: 25px; right: 25px; width: 25px; height: 25px; cursor: pointer; opacity: 0.3; transition: opacity 0.2s; z-index: 10; }
+    .modal-title { font-family: 'Dancing Script', cursive; font-size: 2.2rem; color: var(--gold); margin-bottom: 15px; line-height: 1.1; }
+    .form-group { margin-bottom: 15px; text-align: left; }
+    label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.9rem; margin-left: 10px; }
+    input { width: 100%; padding: 10px 20px; border-radius: 25px; border: 1.5px solid var(--gold-light); font-family: 'Baloo 2', cursive; font-size: 1rem; background: rgba(255,255,255,0.8); outline: none; }
+    input.error { border-color: #ff6b6b; box-shadow: 0 0 10px rgba(255, 107, 107, 0.4); }
+
+    .angee-signature { font-family: 'Dancing Script', cursive; font-size: 2.5rem; font-weight: 700; background: linear-gradient(90deg, var(--gold) 25%, #fffce0 50%, var(--gold) 75%); background-size: 200% auto; background-clip: text; -webkit-background-clip: text; color: transparent; animation: shineText 4s linear infinite; }
+    @keyframes shineText { to { background-position: -200% center; } }
+
+    @media(max-height: 750px){
+      .card { gap: 8px; padding: 20px 20px 30px; }
+      h1 { font-size: 2.5rem; }
+      .bears img { width: 90px; }
+    }
+  </style>
+</head>
+<body>
+
+  <audio id="bgMusic" loop>
+    <source src="music-gender.mp3" type="audio/mpeg">
+  </audio>
+
+  <div id="overlay" class="overlay">
+    <div class="overlay-content">
+      <div id="loader" class="loader"></div>
+      <div id="startContainer">
+        <h2 class="modal-title" style="color: white;">La historia de Angee</h2>
+        <p id="loadingText" style="margin-bottom: 25px; font-size: 1.1rem;">Preparando la magia...</p>
+        <button id="startBtn" class="btn-3d" onclick="startEverything()">Abrir Invitación 🧸</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="music-control" id="musicBtn" onclick="toggleMusic()">
+    <span id="musicIcon">🎵</span>
+  </div>
+
+  <div class="card">
+    <div class="clouds-bg"><img src="nube.png" id="cloudImg1" alt=""><img src="nube.png" id="cloudImg2" alt=""></div>
+    <h1>Había una vez…</h1>
+    <p class="subtitle">un pequeño corazón que estaba por llegar 💛</p>
+    <div class="bears">
+        <img src="2osita.png" id="bearImg1" alt="Osita">
+        <img src="2osito.png" id="bearImg2" alt="Osito">
+    </div>
+    <p class="story">Muy pronto sabremos si nuestro bebé llegará envuelto en <span>dulzura rosa</span> o en <span>ternura celeste</span> 🧸✨</p>
+    <p class="date">📅 Domingo 22 de Febrero 5:00 p.m</p>
+    <div class="countdown">
+      <div><span id="d">0</span>Días</div>
+      <div><span id="h">0</span>Horas</div>
+      <div><span id="m">0</span>Min</div>
+      <div><span id="s">0</span>Seg</div>
+    </div>
+    <button class="btn-3d" onclick="openModal('rsvpModal')">Confirmar asistencia</button>
+    <footer style="margin-top:10px;">Con mucho amor ✨ | <span class="angee-signature">Angee</span></footer>
+  </div>
+
+  <div class="modal-overlay" id="rsvpModal">
+    <div class="modal-card">
+      <div class="close-x" onclick="closeModal('rsvpModal')"></div>
+      <h2 class="modal-title">¿Nos acompañas?</h2>
+      <div class="form-group">
+        <label>Tu nombre:</label>
+        <input type="text" id="guestName" placeholder="Escribe tu nombre..." oninput="validateInput()">
+      </div>
+      <div class="form-group">
+        <label>¿Cuántas personas vienen?</label>
+        <input type="number" id="guestCount" value="1" min="1">
+      </div>
+
+      <p class="poll-title">Angee y su corazoncito tienen una pregunta... <br> ¿Qué te dicta la intuición? ✨</p>
+      <div class="poll-group">
+        <button type="button" class="poll-btn" id="btnBoy" onclick="selectGender('niño')">Team Niño 🧸</button>
+        <button type="button" class="poll-btn" id="btnGirl" onclick="selectGender('niña')">Team Niña 🎀</button>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-3d disabled" id="btnYes" onclick="handleRSVP('si')">¡Si, allí estaré!</button>
+        <button class="btn-3d btn-secondary disabled" id="btnNo" onclick="handleRSVP('no')">No podré ir</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="successModal">
+    <div class="modal-card">
+      <div class="close-x" onclick="closeModal('successModal')"></div>
+      <h2 class="modal-title" id="successTitle">¡Qué alegría!</h2>
+      <p id="successMessage" style="font-size: 1.15rem; line-height: 1.5;"></p>
+      <div class="btn-group">
+        <button class="btn-3d" onclick="closeModal('successModal')">¡Nos vemos pronto!</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const music = document.getElementById('bgMusic');
+    const musicIcon = document.getElementById('musicIcon');
+    const musicBtn = document.getElementById('musicBtn');
+    music.volume = 0.3;
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        music.pause();
+      } else {
+        if (musicBtn.classList.contains('playing')) {
+          music.play().catch(e => console.log("Audio blocked"));
+        }
+      }
+    });
+
+    let selectedGender = "";
+    function selectGender(gender) {
+        selectedGender = gender;
+        document.getElementById('btnBoy').className = (gender === 'niño') ? 'poll-btn selected-boy' : 'poll-btn';
+        document.getElementById('btnGirl').className = (gender === 'niña') ? 'poll-btn selected-girl' : 'poll-btn';
+        validateInput();
+    }
+
+    const assetsToLoad = ['nube.png', '2osita.png', '2osito.png'];
+    let loadedCount = 0;
+
+    function checkAssets() {
+      loadedCount++;
+      if (loadedCount >= assetsToLoad.length) {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('startBtn').style.display = 'inline-block';
+      }
+    }
+
+    assetsToLoad.forEach(src => {
+      const img = new Image();
+      img.src = src;
+      img.onload = checkAssets;
+      img.onerror = checkAssets;
+    });
+
+    function startEverything() {
+      document.getElementById('overlay').classList.add('hidden');
+      music.play().then(() => {
+          musicIcon.innerText = "🔊";
+          musicBtn.classList.add('playing');
+      }).catch(e => console.log("Audio blocked"));
+    }
+
+    function toggleMusic() {
+      if (music.paused) { music.play(); musicIcon.innerText = "🔊"; musicBtn.classList.add('playing'); } 
+      else { music.pause(); musicIcon.innerText = "🎵"; musicBtn.classList.remove('playing'); }
+    }
+
+    const target = new Date('2026-02-22T17:00:00').getTime();
+    setInterval(()=>{
+      const diff = target - new Date().getTime();
+      if(diff <= 0) return;
+      document.getElementById('d').textContent = Math.floor(diff/(1000*60*60*24));
+      document.getElementById('h').textContent = Math.floor((diff/(1000*60*60))%24);
+      document.getElementById('m').textContent = Math.floor((diff/(1000*60))%60);
+      document.getElementById('s').textContent = Math.floor((diff/1000)%60);
+    }, 1000);
+
+    function validateInput() {
+      const nameInput = document.getElementById('guestName');
+      const btnYes = document.getElementById('btnYes');
+      const btnNo = document.getElementById('btnNo');
+      
+      // .trim() elimina espacios al inicio y al final. 
+      // Si solo hay espacios, el resultado es "" (falsy).
+      const isNameValid = nameInput.value.trim().length > 0;
+      
+      // Verificamos que haya un nombre real y que se haya seleccionado un género
+      if (isNameValid && selectedGender !== "") {
+        btnYes.classList.remove('disabled');
+        btnNo.classList.remove('disabled');
+      } else {
+        btnYes.classList.add('disabled');
+        btnNo.classList.add('disabled');
+      }
+    }
+
+    function openModal(id) { 
+      if(id === 'rsvpModal') {
+          selectedGender = "";
+          document.getElementById('btnBoy').className = 'poll-btn';
+          document.getElementById('btnGirl').className = 'poll-btn';
+          document.getElementById('guestName').value = "";
+          validateInput();
+      }
+      document.getElementById(id).style.display = 'flex'; 
+    }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    async function handleRSVP(choice) {
+      const nameInput = document.getElementById('guestName');
+      const name = nameInput.value.trim();
+      const count = document.getElementById('guestCount').value;
+      const attendance = (choice === 'si') ? "Sí asistirá" : "No podrá ir";
+      const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-HX4C8AjFBxs44T01i3bvNIqBKG9Z1qXmmKEr63e7ekEtlz3CL6iAfi_J1x6VqZHm_w/exec';
+      const btn = (choice === 'si') ? document.getElementById('btnYes') : document.getElementById('btnNo');
+      btn.innerText = "Enviando..."; btn.classList.add('disabled');
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ nombre: name, invitados: count, asistencia: attendance, voto: selectedGender })
+        });
+        closeModal('rsvpModal');
+        const msg = document.getElementById('successMessage');
+        
+        if(choice === 'si') {
+          document.getElementById('successTitle').innerText = "¡Confirmado! ✨";
+          
+          // Lógica de mensajes cortos y resaltados
+          let gift = (selectedGender === 'niño') 
+            ? "<span style='color:var(--gold-dark); font-size:1.3rem; font-weight:700; display:block; margin:10px 0;'>🧸 PAÑALES TALLA M</span>"
+            : "<span style='color:var(--gold-dark); font-size:1.3rem; font-weight:700; display:block; margin:10px 0;'>🎀 TOALLITAS HÚMEDAS</span>";
+
+          msg.innerHTML = `¡Gracias por acompañarnos, <b>${name}</b>!<br>
+          Elegiste el <b>Team ${selectedGender.toUpperCase()}</b>.<br><br>
+          Si quieres seguir tu instinto, el regalo sugerido es:<br>
+          ${gift}
+          ¡Nos vemos pronto!`;
+          
+          confetti({ particleCount: 180, spread: 85, origin: { y: 0.6 }, colors: ['#ffd700', '#e0b96a', '#fffce0', '#cfa34f'] });
+        } else {
+          document.getElementById('successTitle').innerText = "Te extrañaremos";
+          msg.innerHTML = `Gracias por avisarnos, <b>${name}</b>.<br>Sentimos que no puedas venir, te enviamos un abrazo tierno. 🧸`;
+        }
+        setTimeout(() => openModal('successModal'), 400);
+      } catch (error) { alert('Hubo un problema.'); } 
+      finally { btn.innerText = (choice === 'si') ? "¡Si, allí estaré!" : "No podré ir"; btn.classList.remove('disabled'); }
+    }
+
+    function createFireflies() {
+      const body = document.body;
+      for (let i = 0; i < 45; i++) {
+          const firefly = document.createElement('div');
+          firefly.classList.add('firefly');
+          firefly.style.left = Math.random() * 100 + 'vw';
+          firefly.style.top = Math.random() * 100 + 'vh';
+          firefly.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+          firefly.style.setProperty('--delay', `${Math.random() * 5}s`);
+          body.appendChild(firefly);
+      }
+    }
+    createFireflies();
+  </script>
+</body>
+</html>
