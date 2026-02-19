@@ -345,7 +345,7 @@
       try {
         await fetch(SCRIPT_URL, {
           method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ nombre: name, invitados: count, asistencia: attendance, voto: selectedGender })
+          body: JSON.stringify({ nombre: name, invitados: count, asistencia: attendance, voto: selectedGender, tipo: 'online' })
         });
         closeModal('rsvpModal');
         const msg = document.getElementById('successMessage');
@@ -391,3 +391,4 @@
 </body>
 
 </html>
+
