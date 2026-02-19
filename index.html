@@ -189,6 +189,7 @@
     </div>
     <p class="story">Muy pronto sabremos si nuestro bebé llegará envuelto en <span>dulzura rosa</span> o en <span>ternura celeste</span> 🧸✨</p>
     <p class="date">📅 Domingo 22 de Febrero 5:00 p.m</p>
+    <p class="subtitle"> Online (Google meet) </p>
     <div class="countdown">
       <div><span id="d">0</span>Días</div>
       <div><span id="h">0</span>Horas</div>
@@ -219,7 +220,7 @@
       </div>
 
       <div class="btn-group">
-        <button class="btn-3d disabled" id="btnYes" onclick="handleRSVP('si')">¡Si, allí estaré!</button>
+        <button class="btn-3d disabled" id="btnYes" onclick="handleRSVP('si')">¡Si, me conectaré!</button>
         <button class="btn-3d btn-secondary disabled" id="btnNo" onclick="handleRSVP('no')">No podré ir</button>
       </div>
     </div>
@@ -337,7 +338,7 @@
       const name = nameInput.value.trim();
       const count = document.getElementById('guestCount').value;
       const attendance = (choice === 'si') ? "Sí asistirá" : "No podrá ir";
-      const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-HX4C8AjFBxs44T01i3bvNIqBKG9Z1qXmmKEr63e7ekEtlz3CL6iAfi_J1x6VqZHm_w/exec';
+      const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlxksG3nzMRK0PfhUw6icNBnkTNS9c616dRJ1QFOqeQx4Rs-UF9d71RiL-c0BUnDqtNg/exec';
       const btn = (choice === 'si') ? document.getElementById('btnYes') : document.getElementById('btnNo');
       btn.innerText = "Enviando..."; btn.classList.add('disabled');
 
@@ -388,4 +389,5 @@
     createFireflies();
   </script>
 </body>
+
 </html>
